@@ -71,7 +71,7 @@
             width: 100%;
             text-align: center;
             font-family: 'Bangers', cursive;
-            font-size: 1.6rem;
+            font-size: 1.5rem;
             color: white;
             text-shadow: 2px 2px 0px rgba(0,0,0,0.5);
             box-shadow: 0 6px 0 #b33e00, 0 10px 10px rgba(0,0,0,0.3);
@@ -114,15 +114,15 @@
             align-items: center;
             background: rgba(255,255,255,0.1);
             border-left: 5px solid var(--dbz-yellow);
-            padding: 15px;
-            margin: 5px 0;
+            padding: 12px 15px;
+            margin: 6px 0;
             width: 100%;
             border-radius: 5px;
             gap: 10px;
         }
-        .rank-number { font-family: 'Bangers'; font-size: 1.5rem; color: var(--dbz-orange); min-width: 40px; }
-        .rank-name { flex: 1; text-align: left; font-weight: bold; font-size: 1.1rem; }
-        .rank-round { color: var(--dbz-yellow); font-size: 0.9rem; white-space: nowrap; }
+        .rank-number { font-family: 'Bangers'; font-size: 1.6rem; color: var(--dbz-orange); min-width: 45px; }
+        .rank-name { flex: 1; text-align: left; font-weight: bold; font-size: 1.1rem; line-height: 1.2; }
+        .rank-stats { text-align: right; font-size: 0.95rem; white-space: nowrap; line-height: 1.3; }
 
         .winner-aura {
             animation: super-saiyan 1.5s infinite alternate;
@@ -188,7 +188,7 @@
         let eliminated = [];
         let currentRound = 1;
         let editingIndex = -1;
-        let currentFighters = []; // Для безопасной обработки кликов
+        let currentFighters = [];
 
         // --- УПРАВЛЕНИЕ ЭКРАНАМИ ---
         function showScreen(screenId) {
@@ -216,7 +216,7 @@
             participants.forEach((p, index) => {
                 const div = document.createElement('div');
                 div.className = 'card';
-                div.style.fontSize = '1.3rem';
+                div.style.fontSize = '1.25rem';
                 div.style.padding = '15px';
                 div.innerHTML = `
                     ${editingIndex === index ? 
@@ -270,7 +270,7 @@
             }
         }
 
-        // --- ЛОГИКА ТУРНИРА (ИСПРАВЛЕННАЯ) ---
+        // --- ЛОГИКА ТУРНИРА ---
         function shuffle(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -296,7 +296,7 @@
             const battleArea = document.getElementById('battle-area');
             battleArea.innerHTML = '';
 
-            // 1. Если текущий пул пуст, проверяем, кто прошел в следующий раунд
+            // Если текущий пул пуст, проверяем, кто прошел в следующий раунд
             if (tournamentPool.length === 0) {
                 if (nextRoundPool.length === 1) {
                     // Остался только один человек во всем турнире - это ПОБЕДИТЕЛЬ!
@@ -308,26 +308,26 @@
                     tournamentPool = shuffle([...nextRoundPool]);
                     nextRoundPool = [];
                     currentRound++;
-                    nextBattle(); // Рекурсивно запускаем обработку следующего раунда
+                    nextBattle();
                     return;
                 }
             }
 
-            // 2. Берем первого бойца из текущей пары
+            // Берем первого бойца из текущей пары
             const fighter1 = tournamentPool.shift();
 
-            // 3. Если после этого пул пуст, этому бойцу достается "бай-бай" (автоматический проход)
+            // Если после этого пул пуст, этому бойцу достается "бай-бай" (автоматический проход)
             if (tournamentPool.length === 0) {
                 nextRoundPool.push(fighter1);
-                nextBattle(); // Сразу ищем следующую пару или завершаем раунд
+                nextBattle();
                 return;
             }
 
-            // 4. Иначе берем второго бойца для полноценной пары
+            // Иначе берем второго бойца для полноценной пары
             const fighter2 = tournamentPool.shift();
-            currentFighters = [fighter1, fighter2]; // Сохраняем для безопасной обработки клика
+            currentFighters = [fighter1, fighter2];
 
-            // 5. Отрисовка боя
+            // Отрисовка боя
             document.getElementById('round-indicator').innerText = `РАУНД ${currentRound}`;
             battleArea.innerHTML = `
                 <div class="card" onclick="resolveBattle(0)">${fighter1}</div>
@@ -346,21 +346,39 @@
             nextBattle();
         }
 
+        // --- ЛОГИКА РЕЗУЛЬТАТОВ (ИСПРАВЛЕННАЯ) ---
         function showResults() {
             showScreen('result-screen');
-            const winner = eliminated[0]; // Первый в массиве - последний выбывший (победитель)
+            
+            // 1. Отделяем победителя (он всегда первый в массиве eliminated благодаря unshift)
+            const winner = eliminated.shift();
+            winner.isWinner = true;
+            
+            // 2. Сортируем остальных выбывших по убыванию раунда (кто дольше продержался - тот выше)
+            eliminated.sort((a, b) => b.round - a.round);
+            
+            // 3. Возвращаем победителя на первое место
+            eliminated.unshift(winner);
+            
+            // 4. Отрисовка
             document.getElementById('winner-card').innerText = winner.name;
             
             const rankList = document.getElementById('ranking-list');
             rankList.innerHTML = '';
             
             eliminated.forEach((fighter, index) => {
+                // Расчет очков: у победителя = раунд победы + 1, у остальных = раунд вылета
+                const points = fighter.isWinner ? fighter.round + 1 : fighter.round;
+                
                 const div = document.createElement('div');
                 div.className = 'rank-item';
                 div.innerHTML = `
                     <span class="rank-number">#${index + 1}</span>
                     <span class="rank-name">${fighter.name}</span>
-                    <span class="rank-round">Раунд: ${fighter.round}</span>
+                    <span class="rank-stats">
+                        Раунд: ${fighter.round}<br>
+                        <strong style="color: var(--dbz-yellow); font-size: 1.1rem;">Очки: ${points}</strong>
+                    </span>
                 `;
                 rankList.appendChild(div);
             });
