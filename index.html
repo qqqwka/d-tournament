@@ -11,7 +11,6 @@
             --dbz-blue: #072083;
             --dbz-yellow: #F7D02C;
             --dbz-dark: #1a1a1a;
-            --scouter-green: #00ff41;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; touch-action: manipulation; }
@@ -35,7 +34,7 @@
             text-shadow: 3px 3px 0px var(--dbz-blue);
         }
 
-        h1 { color: var(--dbz-yellow); font-size: 3rem; margin-bottom: 30px; text-align: center; }
+        h1 { color: var(--dbz-yellow); font-size: 3rem; margin-bottom: 30px; text-align: center; line-height: 1.1; }
         h2 { color: var(--dbz-orange); font-size: 2rem; margin-bottom: 20px; text-align: center; }
 
         .screen { display: none; width: 100%; max-width: 500px; flex-direction: column; align-items: center; }
@@ -57,20 +56,11 @@
             box-shadow: 0 5px 0 #b33e00;
         }
 
-        .btn:active {
-            transform: translateY(4px);
-            box-shadow: 0 1px 0 #b33e00;
-        }
-
+        .btn:active { transform: translateY(4px); box-shadow: 0 1px 0 #b33e00; }
         .btn-blue { background: var(--dbz-blue); border-color: #4169E1; box-shadow: 0 5px 0 #04124d; }
         .btn-blue:active { box-shadow: 0 1px 0 #04124d; }
-        
-        .btn-small {
-            padding: 8px 15px;
-            font-size: 1rem;
-            width: auto;
-            margin: 5px;
-        }
+        .btn-small { padding: 8px 15px; font-size: 1rem; width: auto; margin: 5px; }
+        .btn-green { background: #28a745; border-color: #34ce57; box-shadow: 0 5px 0 #1e7e34; font-size: 1rem; }
 
         .card {
             background: linear-gradient(135deg, var(--dbz-orange), #ff8c00);
@@ -81,13 +71,15 @@
             width: 100%;
             text-align: center;
             font-family: 'Bangers', cursive;
-            font-size: 1.8rem;
+            font-size: 1.6rem;
             color: white;
             text-shadow: 2px 2px 0px rgba(0,0,0,0.5);
             box-shadow: 0 6px 0 #b33e00, 0 10px 10px rgba(0,0,0,0.3);
             cursor: pointer;
             transition: transform 0.1s;
-            position: relative;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            line-height: 1.2;
         }
 
         .card:active { transform: scale(0.98); }
@@ -107,10 +99,10 @@
 
         .vs-text {
             font-family: 'Bangers', cursive;
-            font-size: 3rem;
+            font-size: 3.5rem;
             color: var(--dbz-yellow);
             text-shadow: 4px 4px 0px var(--dbz-blue);
-            margin: 20px 0;
+            margin: 15px 0;
             animation: pulse 1s infinite alternate;
         }
 
@@ -126,11 +118,15 @@
             margin: 5px 0;
             width: 100%;
             border-radius: 5px;
+            gap: 10px;
         }
-        .rank-number { font-family: 'Bangers'; font-size: 1.5rem; color: var(--dbz-orange); }
+        .rank-number { font-family: 'Bangers'; font-size: 1.5rem; color: var(--dbz-orange); min-width: 40px; }
+        .rank-name { flex: 1; text-align: left; font-weight: bold; font-size: 1.1rem; }
+        .rank-round { color: var(--dbz-yellow); font-size: 0.9rem; white-space: nowrap; }
 
         .winner-aura {
             animation: super-saiyan 1.5s infinite alternate;
+            font-size: 2rem !important;
         }
         @keyframes super-saiyan {
             0% { box-shadow: 0 0 10px var(--dbz-yellow), 0 0 20px var(--dbz-orange); border-color: var(--dbz-yellow); }
@@ -151,9 +147,10 @@
     <div id="edit-screen" class="screen">
         <h2>Участники</h2>
         <div class="input-group">
-            <input type="text" id="new-participant" placeholder="Имя бойца..." maxlength="20">
+            <input type="text" id="new-participant" placeholder="Имя бойца / Книга..." maxlength="40">
             <button class="btn btn-small" onclick="addParticipant()">+</button>
         </div>
+        <button class="btn btn-small btn-green" onclick="resetToDefaultBooks()" style="width: 100%; margin-bottom: 15px;">📚 Загрузить список книг по умолчанию</button>
         <div id="participants-list" style="width: 100%;"></div>
         <button class="btn btn-blue" onclick="showScreen('main-screen')" style="margin-top: 20px;">← НАЗАД</button>
     </div>
@@ -164,13 +161,13 @@
         <div id="battle-area" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
             <!-- Карточки бойцов появятся здесь -->
         </div>
-        <button class="btn btn-small" onclick="showScreen('main-screen')" style="margin-top: 30px;">СДАТЬСЯ (В меню)</button>
+        <button class="btn btn-small" onclick="showScreen('main-screen')" style="margin-top: 30px; background: #555; border-color: #777; box-shadow: 0 5px 0 #333;">СДАТЬСЯ (В меню)</button>
     </div>
 
     <!-- ЭКРАН РЕЗУЛЬТАТОВ -->
     <div id="result-screen" class="screen">
         <h1>ПОБЕДИТЕЛЬ!</h1>
-        <div id="winner-card" class="card winner-aura" style="font-size: 2.5rem; margin-bottom: 30px;"></div>
+        <div id="winner-card" class="card winner-aura" style="margin-bottom: 30px;"></div>
         <h2>ТОП БОЙЦОВ</h2>
         <div id="ranking-list" style="width: 100%;"></div>
         <button class="btn" onclick="showScreen('main-screen')" style="margin-top: 20px;">В ГЛАВНОЕ МЕНЮ</button>
@@ -178,12 +175,20 @@
 
     <script>
         // --- ДАННЫЕ И СОСТОЯНИЕ ---
-        let participants = JSON.parse(localStorage.getItem('dbz_participants')) || ['ЭТО БОЛВАНКА - МОЖЕШЬ ЕЕ СКПИАТЬ', 'мифы о смерти', 'мифы о ёкаях', 'мифы о вампирах', 'воздушный замок', 'манга Сердца Пандоры', 'у меня нет рта но я должен кричать', 'О мышах и людях', 'Скотный двор', 'Завтрак у Тиффани', 'Великий Гэтсби', 'Повелитель мух', 'Хан Ган - Человеческие поступки', 'Кормак Маккарти - Дорога'];
+        const defaultBooks = [
+            'мифы о смерти', 'мифы о ёкаях', 'мифы о вампирах', 'воздушный замок',
+            'манга Сердца Пандоры', 'у меня нет рта но я должен кричать', 'О мышах и людях',
+            'Скотный двор', 'Завтрак у Тиффани', 'Великий Гэтсби', 'Повелитель мух',
+            'Хан Ган - Человеческие поступки', 'Кормак Маккарти - Дорога'
+        ];
+
+        let participants = JSON.parse(localStorage.getItem('dbz_participants')) || [...defaultBooks];
         let tournamentPool = [];
         let nextRoundPool = [];
         let eliminated = [];
         let currentRound = 1;
         let editingIndex = -1;
+        let currentFighters = []; // Для безопасной обработки кликов
 
         // --- УПРАВЛЕНИЕ ЭКРАНАМИ ---
         function showScreen(screenId) {
@@ -197,17 +202,25 @@
             localStorage.setItem('dbz_participants', JSON.stringify(participants));
         }
 
+        function resetToDefaultBooks() {
+            if(confirm('Заменить текущий список на список книг по умолчанию?')) {
+                participants = [...defaultBooks];
+                saveParticipants();
+                renderParticipantsList();
+            }
+        }
+
         function renderParticipantsList() {
             const list = document.getElementById('participants-list');
             list.innerHTML = '';
             participants.forEach((p, index) => {
                 const div = document.createElement('div');
                 div.className = 'card';
-                div.style.fontSize = '1.4rem';
+                div.style.fontSize = '1.3rem';
                 div.style.padding = '15px';
                 div.innerHTML = `
                     ${editingIndex === index ? 
-                        `<input type="text" id="edit-input-${index}" value="${p}" style="width: 70%; font-size: 1.2rem; padding: 5px;">` : 
+                        `<input type="text" id="edit-input-${index}" value="${p}" style="width: 100%; font-size: 1.1rem; padding: 8px; margin-bottom: 10px;">` : 
                         `<span>${p}</span>`
                     }
                     <div class="card-controls">
@@ -249,7 +262,7 @@
         }
 
         function deleteParticipant(index) {
-            if(confirm('Удалить этого бойца?')) {
+            if(confirm('Удалить этого участника?')) {
                 participants.splice(index, 1);
                 editingIndex = -1;
                 saveParticipants();
@@ -257,7 +270,7 @@
             }
         }
 
-        // --- ЛОГИКА ТУРНИРА ---
+        // --- ЛОГИКА ТУРНИРА (ИСПРАВЛЕННАЯ) ---
         function shuffle(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -268,7 +281,7 @@
 
         function startTournament() {
             if (participants.length < 2) {
-                alert('Нужно минимум 2 бойца для турнира! Добавь их в редакторе.');
+                alert('Нужно минимум 2 участника для турнира! Добавь их в редакторе.');
                 return;
             }
             tournamentPool = shuffle([...participants]);
@@ -280,48 +293,54 @@
         }
 
         function nextBattle() {
-            document.getElementById('round-indicator').innerText = `РАУНД ${currentRound}`;
             const battleArea = document.getElementById('battle-area');
             battleArea.innerHTML = '';
 
-            if (tournamentPool.length === 1) {
-                // Победитель определен
-                eliminated.unshift({ name: tournamentPool[0], round: currentRound });
-                showResults();
-                return;
-            }
-
+            // 1. Если текущий пул пуст, проверяем, кто прошел в следующий раунд
             if (tournamentPool.length === 0) {
-                // Переход к следующему раунду
-                tournamentPool = shuffle([...nextRoundPool]);
-                nextRoundPool = [];
-                currentRound++;
-                nextBattle();
-                return;
+                if (nextRoundPool.length === 1) {
+                    // Остался только один человек во всем турнире - это ПОБЕДИТЕЛЬ!
+                    eliminated.unshift({ name: nextRoundPool[0], round: currentRound });
+                    showResults();
+                    return;
+                } else if (nextRoundPool.length > 1) {
+                    // Раунд завершен, готовим следующий раунд
+                    tournamentPool = shuffle([...nextRoundPool]);
+                    nextRoundPool = [];
+                    currentRound++;
+                    nextBattle(); // Рекурсивно запускаем обработку следующего раунда
+                    return;
+                }
             }
 
-            // Берем двух бойцов
+            // 2. Берем первого бойца из текущей пары
             const fighter1 = tournamentPool.shift();
-            
+
+            // 3. Если после этого пул пуст, этому бойцу достается "бай-бай" (автоматический проход)
             if (tournamentPool.length === 0) {
-                // Нечетное количество, один проходит автоматически (bye)
                 nextRoundPool.push(fighter1);
-                nextBattle(); // Сразу следующий бой
+                nextBattle(); // Сразу ищем следующую пару или завершаем раунд
                 return;
             }
 
+            // 4. Иначе берем второго бойца для полноценной пары
             const fighter2 = tournamentPool.shift();
+            currentFighters = [fighter1, fighter2]; // Сохраняем для безопасной обработки клика
 
-            // Отрисовка боя
+            // 5. Отрисовка боя
+            document.getElementById('round-indicator').innerText = `РАУНД ${currentRound}`;
             battleArea.innerHTML = `
-                <div class="card" onclick="resolveBattle('${fighter1}', '${fighter2}')">${fighter1}</div>
+                <div class="card" onclick="resolveBattle(0)">${fighter1}</div>
                 <div class="vs-text">VS</div>
-                <div class="card" onclick="resolveBattle('${fighter2}', '${fighter1}')">${fighter2}</div>
+                <div class="card" onclick="resolveBattle(1)">${fighter2}</div>
                 <p style="margin-top: 20px; color: #aaa; font-size: 0.9rem;">Нажми на победителя!</p>
             `;
         }
 
-        function resolveBattle(winner, loser) {
+        function resolveBattle(winnerIndex) {
+            const winner = currentFighters[winnerIndex];
+            const loser = currentFighters[winnerIndex === 0 ? 1 : 0];
+            
             nextRoundPool.push(winner);
             eliminated.push({ name: loser, round: currentRound });
             nextBattle();
@@ -340,8 +359,8 @@
                 div.className = 'rank-item';
                 div.innerHTML = `
                     <span class="rank-number">#${index + 1}</span>
-                    <span style="font-size: 1.2rem; font-weight: bold;">${fighter.name}</span>
-                    <span style="color: var(--dbz-yellow);">Раунд: ${fighter.round}</span>
+                    <span class="rank-name">${fighter.name}</span>
+                    <span class="rank-round">Раунд: ${fighter.round}</span>
                 `;
                 rankList.appendChild(div);
             });
