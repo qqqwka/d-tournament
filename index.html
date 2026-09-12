@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DBZ Tournament</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --dbz-orange: #F85B1A;
+            --dbz-blue: #072083;
+            --dbz-yellow: #F7D02C;
+            --dbz-dark: #1a1a1a;
+            --scouter-green: #00ff41;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; touch-action: manipulation; }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: radial-gradient(circle, #2a2a2a 0%, #000000 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Bangers', cursive;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-shadow: 3px 3px 0px var(--dbz-blue);
+        }
+
+        h1 { color: var(--dbz-yellow); font-size: 3rem; margin-bottom: 30px; text-align: center; }
+        h2 { color: var(--dbz-orange); font-size: 2rem; margin-bottom: 20px; text-align: center; }
+
+        .screen { display: none; width: 100%; max-width: 500px; flex-direction: column; align-items: center; }
+        .screen.active { display: flex; }
+
+        .btn {
+            background: var(--dbz-orange);
+            color: white;
+            border: 3px solid var(--dbz-yellow);
+            padding: 15px 30px;
+            font-family: 'Bangers', cursive;
+            font-size: 1.5rem;
+            letter-spacing: 1px;
+            border-radius: 10px;
+            cursor: pointer;
+            width: 100%;
+            margin: 10px 0;
+            transition: transform 0.1s, box-shadow 0.1s;
+            box-shadow: 0 5px 0 #b33e00;
+        }
+
+        .btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 1px 0 #b33e00;
+        }
+
+        .btn-blue { background: var(--dbz-blue); border-color: #4169E1; box-shadow: 0 5px 0 #04124d; }
+        .btn-blue:active { box-shadow: 0 1px 0 #04124d; }
+        
+        .btn-small {
+            padding: 8px 15px;
+            font-size: 1rem;
+            width: auto;
+            margin: 5px;
+        }
+
+        .card {
+            background: linear-gradient(135deg, var(--dbz-orange), #ff8c00);
+            border: 3px solid var(--dbz-yellow);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 10px 0;
+            width: 100%;
+            text-align: center;
+            font-family: 'Bangers', cursive;
+            font-size: 1.8rem;
+            color: white;
+            text-shadow: 2px 2px 0px rgba(0,0,0,0.5);
+            box-shadow: 0 6px 0 #b33e00, 0 10px 10px rgba(0,0,0,0.3);
+            cursor: pointer;
+            transition: transform 0.1s;
+            position: relative;
+        }
+
+        .card:active { transform: scale(0.98); }
+        .card-controls { display: flex; justify-content: center; gap: 10px; margin-top: 10px; }
+
+        .input-group { display: flex; width: 100%; gap: 10px; margin-bottom: 20px; }
+        input[type="text"] {
+            flex: 1;
+            padding: 15px;
+            border: 3px solid var(--dbz-blue);
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-family: 'Roboto', sans-serif;
+            background: #fff;
+            color: var(--dbz-dark);
+        }
+
+        .vs-text {
+            font-family: 'Bangers', cursive;
+            font-size: 3rem;
+            color: var(--dbz-yellow);
+            text-shadow: 4px 4px 0px var(--dbz-blue);
+            margin: 20px 0;
+            animation: pulse 1s infinite alternate;
+        }
+
+        @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.1); } }
+
+        .rank-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255,255,255,0.1);
+            border-left: 5px solid var(--dbz-yellow);
+            padding: 15px;
+            margin: 5px 0;
+            width: 100%;
+            border-radius: 5px;
+        }
+        .rank-number { font-family: 'Bangers'; font-size: 1.5rem; color: var(--dbz-orange); }
+
+        .winner-aura {
+            animation: super-saiyan 1.5s infinite alternate;
+        }
+        @keyframes super-saiyan {
+            0% { box-shadow: 0 0 10px var(--dbz-yellow), 0 0 20px var(--dbz-orange); border-color: var(--dbz-yellow); }
+            100% { box-shadow: 0 0 20px var(--dbz-yellow), 0 0 40px var(--dbz-orange), 0 0 60px white; border-color: white; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ГЛАВНЫЙ ЭКРАН -->
+    <div id="main-screen" class="screen active">
+        <h1>DRAGON BALL<br>TOURNAMENT</h1>
+        <button class="btn" onclick="showScreen('edit-screen')">⚙️ РЕДАКТИРОВАТЬ</button>
+        <button class="btn btn-blue" onclick="startTournament()">🔥 ИГРАТЬ</button>
+    </div>
+
+    <!-- ЭКРАН РЕДАКТИРОВАНИЯ -->
+    <div id="edit-screen" class="screen">
+        <h2>Участники</h2>
+        <div class="input-group">
+            <input type="text" id="new-participant" placeholder="Имя бойца..." maxlength="20">
+            <button class="btn btn-small" onclick="addParticipant()">+</button>
+        </div>
+        <div id="participants-list" style="width: 100%;"></div>
+        <button class="btn btn-blue" onclick="showScreen('main-screen')" style="margin-top: 20px;">← НАЗАД</button>
+    </div>
+
+    <!-- ЭКРАН ИГРЫ -->
+    <div id="play-screen" class="screen">
+        <h2 id="round-indicator">Раунд 1</h2>
+        <div id="battle-area" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+            <!-- Карточки бойцов появятся здесь -->
+        </div>
+        <button class="btn btn-small" onclick="showScreen('main-screen')" style="margin-top: 30px;">СДАТЬСЯ (В меню)</button>
+    </div>
+
+    <!-- ЭКРАН РЕЗУЛЬТАТОВ -->
+    <div id="result-screen" class="screen">
+        <h1>ПОБЕДИТЕЛЬ!</h1>
+        <div id="winner-card" class="card winner-aura" style="font-size: 2.5rem; margin-bottom: 30px;"></div>
+        <h2>ТОП БОЙЦОВ</h2>
+        <div id="ranking-list" style="width: 100%;"></div>
+        <button class="btn" onclick="showScreen('main-screen')" style="margin-top: 20px;">В ГЛАВНОЕ МЕНЮ</button>
+    </div>
+
+    <script>
+        // --- ДАННЫЕ И СОСТОЯНИЕ ---
+        let participants = JSON.parse(localStorage.getItem('dbz_participants')) || ['Goku', 'Vegeta', 'Piccolo', 'Frieza'];
+        let tournamentPool = [];
+        let nextRoundPool = [];
+        let eliminated = [];
+        let currentRound = 1;
+        let editingIndex = -1;
+
+        // --- УПРАВЛЕНИЕ ЭКРАНАМИ ---
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            if (screenId === 'edit-screen') renderParticipantsList();
+        }
+
+        // --- ЛОГИКА РЕДАКТИРОВАНИЯ ---
+        function saveParticipants() {
+            localStorage.setItem('dbz_participants', JSON.stringify(participants));
+        }
+
+        function renderParticipantsList() {
+            const list = document.getElementById('participants-list');
+            list.innerHTML = '';
+            participants.forEach((p, index) => {
+                const div = document.createElement('div');
+                div.className = 'card';
+                div.style.fontSize = '1.4rem';
+                div.style.padding = '15px';
+                div.innerHTML = `
+                    ${editingIndex === index ? 
+                        `<input type="text" id="edit-input-${index}" value="${p}" style="width: 70%; font-size: 1.2rem; padding: 5px;">` : 
+                        `<span>${p}</span>`
+                    }
+                    <div class="card-controls">
+                        ${editingIndex === index ? 
+                            `<button class="btn btn-small" onclick="saveEdit(${index})">💾</button>` : 
+                            `<button class="btn btn-small" onclick="startEdit(${index})">✏️</button>`
+                        }
+                        <button class="btn btn-small" style="background: #cc0000;" onclick="deleteParticipant(${index})">🗑️</button>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        function addParticipant() {
+            const input = document.getElementById('new-participant');
+            const name = input.value.trim();
+            if (name) {
+                participants.push(name);
+                input.value = '';
+                saveParticipants();
+                renderParticipantsList();
+            }
+        }
+
+        function startEdit(index) {
+            editingIndex = index;
+            renderParticipantsList();
+        }
+
+        function saveEdit(index) {
+            const newName = document.getElementById(`edit-input-${index}`).value.trim();
+            if (newName) {
+                participants[index] = newName;
+                editingIndex = -1;
+                saveParticipants();
+                renderParticipantsList();
+            }
+        }
+
+        function deleteParticipant(index) {
+            if(confirm('Удалить этого бойца?')) {
+                participants.splice(index, 1);
+                editingIndex = -1;
+                saveParticipants();
+                renderParticipantsList();
+            }
+        }
+
+        // --- ЛОГИКА ТУРНИРА ---
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function startTournament() {
+            if (participants.length < 2) {
+                alert('Нужно минимум 2 бойца для турнира! Добавь их в редакторе.');
+                return;
+            }
+            tournamentPool = shuffle([...participants]);
+            nextRoundPool = [];
+            eliminated = [];
+            currentRound = 1;
+            showScreen('play-screen');
+            nextBattle();
+        }
+
+        function nextBattle() {
+            document.getElementById('round-indicator').innerText = `РАУНД ${currentRound}`;
+            const battleArea = document.getElementById('battle-area');
+            battleArea.innerHTML = '';
+
+            if (tournamentPool.length === 1) {
+                // Победитель определен
+                eliminated.unshift({ name: tournamentPool[0], round: currentRound });
+                showResults();
+                return;
+            }
+
+            if (tournamentPool.length === 0) {
+                // Переход к следующему раунду
+                tournamentPool = shuffle([...nextRoundPool]);
+                nextRoundPool = [];
+                currentRound++;
+                nextBattle();
+                return;
+            }
+
+            // Берем двух бойцов
+            const fighter1 = tournamentPool.shift();
+            
+            if (tournamentPool.length === 0) {
+                // Нечетное количество, один проходит автоматически (bye)
+                nextRoundPool.push(fighter1);
+                nextBattle(); // Сразу следующий бой
+                return;
+            }
+
+            const fighter2 = tournamentPool.shift();
+
+            // Отрисовка боя
+            battleArea.innerHTML = `
+                <div class="card" onclick="resolveBattle('${fighter1}', '${fighter2}')">${fighter1}</div>
+                <div class="vs-text">VS</div>
+                <div class="card" onclick="resolveBattle('${fighter2}', '${fighter1}')">${fighter2}</div>
+                <p style="margin-top: 20px; color: #aaa; font-size: 0.9rem;">Нажми на победителя!</p>
+            `;
+        }
+
+        function resolveBattle(winner, loser) {
+            nextRoundPool.push(winner);
+            eliminated.push({ name: loser, round: currentRound });
+            nextBattle();
+        }
+
+        function showResults() {
+            showScreen('result-screen');
+            const winner = eliminated[0]; // Первый в массиве - последний выбывший (победитель)
+            document.getElementById('winner-card').innerText = winner.name;
+            
+            const rankList = document.getElementById('ranking-list');
+            rankList.innerHTML = '';
+            
+            eliminated.forEach((fighter, index) => {
+                const div = document.createElement('div');
+                div.className = 'rank-item';
+                div.innerHTML = `
+                    <span class="rank-number">#${index + 1}</span>
+                    <span style="font-size: 1.2rem; font-weight: bold;">${fighter.name}</span>
+                    <span style="color: var(--dbz-yellow);">Раунд: ${fighter.round}</span>
+                `;
+                rankList.appendChild(div);
+            });
+        }
+    </script>
+</body>
+</html>
